@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Location Test</title>
+    <!--
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    -->
+    <p id=demo>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+    <script>
+        var app = angular.module('myApp', []);
+        app.controller('myCtrl', function($scope) {
+            $scope.position = {coords : {latitude :0, longitude:0}};
+            $scope.email = "";
+            $scope.accountId = "";
+
+            $scope.signIn = function() {
+                console.log("signIn()");
+                $scope.accountId = $scope.email;
+            }
+
+            $scope.getId = function() {
+                console.log("getId()");
+                $.ajax({
+                    url: "http://localhost:5000/api/id"
+                }).then(function(data) {
+                    $scope.$apply(function(){
+                        $scope.guid = data.guid;
+                    });
+                    console.log("$scope.guid : " + $scope.guid);
+                });
+            }
+
+            // PUT api/location/[guid]?latitude=1.0&longitude=2.0&altitude=3.0
+            $scope.sendMyPosition = function() {
+                console.log("sendMyPosition()");
+                $.ajax({
+                    url: 'http://localhost:5000/api/location/' + $scope.accountId
+                        + '?latitude=' + $scope.position.coords.latitude
+                        + '&longitude=' + $scope.position.coords.longitude
+                        + '&altitude=' + 0,
+                    type: 'PUT'
+                });
+            }
+
+            $scope.getAndSendMyPosition = function() {
+                navigator.geolocation.getCurrentPosition()
+                .then(position => {
+                    $scope.$apply(function(){
+                        $scope.position = position;
+                    });
+                    $.ajax({
+                        url: 'http://localhost:5000/api/location/' + $scope.accountId
+                            + '?latitude=' + $scope.position.coords.latitude
+                            + '&longitude=' + $scope.position.coords.longitude
+                            + '&altitude=' + 0,
+                        type: 'PUT'
+                    })
+                    .done(function(data) {
+                        console.log("sent position : " + position);
+                    })
+                    .fail(function(data) {
+                        console.log("FAILED to send position : " + position);
+                    });
+                })
+            }
+
+
+            $scope.trackMe = function() {
+                console.log("trackMe()");
+            }
+
+            $scope.stopTrackingMe = function() {
+                console.log("stopTrackingMe()");
+            }
+
+            $scope.getLocation = function() {
+                console.log("getLocation()");
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        $scope.$apply(function(){
+                            $scope.position = position;
+                        });
+                        console.log("position : " + position);
+                    },
+                    function(error) {
+                        var errors = {
+                            1: 'Permission denied',
+                            2: 'Position unavailable',
+                            3: 'Request timeout'
+                        };
+                        console.log("Error: " + errors[error.code]);
+                    }
+                );
+            }
+        });
+</script>
+  </head>
+  <body>
+    <h1>Location Test</h1>
+    <div ng-app="myApp" ng-controller="myCtrl">
+        Enter Email :
+        <input type="text" name="usrname" ng-model="email"><br>
+        <button type="button" class="btn btn-primary" ng-click="signIn()">Sign In</button>
+        <br>
+        Account Id : {{accountId}}
+        <br>
+        <br>
+        <button type="button" class="btn btn-primary" ng-click="getLocation()">Get My Location</button>
+        <br>
+        Your geographic position is latitude : {{position.coords.latitude}}, longitude : {{position.coords.longitude}}
+        <br>
+        <br>
+        <button type="button" class="btn btn-primary" ng-click="getAndSendMyPosition()">Get & Send My Position</button>
+        <br>
+        <br>
+        <button type="button" class="btn btn-primary" ng-click="sendMyPosition()">Send My Position</button>
+        <br>
+        <br>
+        <button type="button" class="btn btn-primary" ng-click="trackMe()">Track Me</button>
+        <br>
+        <br>
+        <button type="button" class="btn btn-primary" ng-click="stopTrackingMe()">Stop Tracking Me</button>
+        <br>
+    </div>
+  </body>
+</html>
